@@ -1,5 +1,7 @@
 <?php
 
+use App\Controllers\UserController;
+
 require_once '../vendor/autoload.php';
 
 header("Access-Control-Allow-Origin: *");
@@ -9,30 +11,32 @@ header("Access-Control-Max-Age: 3600");
 $requestMethod = $_SERVER['REQUEST_METHOD'];
 $requestUri = $_SERVER['REQUEST_URI'];
 
+$requestUri = trim($requestUri, '/');
+$userController = new UserController();
+
 switch ($requestMethod) {
     case 'GET':
-        if ($requestUri == '/users') {
-            require_once '../Pages/Users/read.php';
-        } elseif (preg_match('/^\/users\/(\d+)$/', $requestUri, $matches)) {
-            define('USER_ID', $matches[1]);
-            require '../Pages/Users/readOne.php';
+        if ($requestUri == 'users') {
+            $userController->readAllUsers();
+        } elseif (preg_match('/^users\/(\d+)$/', $requestUri, $matches)) {
+
+            $userController->readOneUser($matches[1]);
         }
         break;
     case 'POST':
-        if ($requestUri == '/users') {
-            require '../Pages/Users/create.php';
+        if ($requestUri == 'users') {
+            $userController->createUser();
         }
         break;
     case 'PUT':
-        if (preg_match('/^\/users\/(\d+)$/', $requestUri, $matches)) {
-            define('USER_ID', $matches[1]);
-            require '../Pages/Users/update.php';
+        if (preg_match('/^users\/(\d+)$/', $requestUri, $matches)) {
+            $userController->updateUser($matches[1]);
+
         }
         break;
     case 'DELETE':
-        if (preg_match('/^\/users\/(\d+)$/', $requestUri, $matches)) {
-            define('USER_ID', $matches[1]);
-            require '../Pages/Users/delete.php';
+        if (preg_match('/^users\/(\d+)$/', $requestUri, $matches)) {
+            $userController->deleteUser($matches[1]);
         }
         break;
     default:
