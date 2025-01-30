@@ -11,10 +11,10 @@ use PDO;
 
 class UserController
 {
-    private ?PDO $db;
-    private ?User $user;
+    private PDO $db;
+    private User $user;
 
-    private object|array|null $data;
+    private object|array|null $inputData;
 
     public function __construct()
     {
@@ -28,24 +28,27 @@ class UserController
         header("Access-Control-Allow-Origin: *");
         header("Content-Type: application/json; charset=UTF-8");
         header("Access-Control-Allow-Methods: $method");
+
+        if($method != 'GET') {
+            header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+        }
     }
 
     public function readAllUsers(): void
     {
         $this->setHeaders();
-        header("Access-Control-Max-Age: 3600");
 
         $stmt = $this->user->read();
-        $number_rows = $stmt->rowCount();
+        $numberRows = $stmt->rowCount();
 
-        if ($number_rows) {
-            $users_arr = [];
+        if ($numberRows) {
+            $usersArray = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 extract($row);
-                $users_arr[] = $row;
+                $usersArray[] = $row;
             }
             $this->sendResponse([
-                "users" => $users_arr
+                "users" => $usersArray
             ]);
         } else $this->sendResponse("User not found.", 404);
     }
@@ -53,17 +56,15 @@ class UserController
     public function readOneUser(int|string $id): void
     {
         $this->setHeaders();
-        header("Access-Control-Allow-Headers: access");
-        header("Access-Control-Allow-Credentials: true");
 
         $this->user->id = (int) $id;
         $this->user->readOne();
 
         if ($this->user->id) {
-            $users_arr = $this->user;
+            $usersArray = $this->user;
 
             $this->sendResponse([
-                "user" => $users_arr
+                "user" => $usersArray
             ]);
         } else $this->sendResponse("User not found.", 404);
     }
@@ -71,8 +72,6 @@ class UserController
     public function deleteUser(int|string $id): void
     {
         $this->setHeaders('DELETE');
-        header("Access-Control-Allow-Headers: access");
-        header("Access-Control-Allow-Credentials: true");
 
         $this->user->id = $id;
         if ($this->user->delete()) {
@@ -83,14 +82,12 @@ class UserController
     public function createUser(): void
     {
         $this->setHeaders('POST');
-        header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
-        header("Access-Control-Max-Age: 3600");
 
-        $this->data = json_decode(file_get_contents("php://input"));
+        $this->inputData = json_decode(file_get_contents("php://input"));
 
-        if (isset($this->data->first_name) && isset($this->data->last_name)) {
-            $this->user->first_name = htmlspecialchars($this->data->first_name);
-            $this->user->last_name = htmlspecialchars($this->data->last_name);
+        if (isset($this->inputData->first_name) && isset($this->inputData->last_name)) {
+            $this->user->first_name = htmlspecialchars($this->inputData->first_name);
+            $this->user->last_name = htmlspecialchars($this->inputData->last_name);
             $this->user->created_at = date("Y-m-d H:i:s");
 
             $this->user->create() ? $this->sendSuccessCreatedResponse() : $this->sendResponse("Unable to create user.", 422);
@@ -100,14 +97,13 @@ class UserController
     public function updateUser(int|string $id): void
     {
         $this->setHeaders('PUT');
-        header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
-        $this->data = json_decode(file_get_contents("php://input"));
+        $this->inputData = json_decode(file_get_contents("php://input"));
 
-        if (isset($this->data->first_name) && isset($this->data->last_name)) {
+        if (isset($this->inputData->first_name) && isset($this->inputData->last_name)) {
             $this->user->id = $id;
-            $this->user->first_name = htmlspecialchars($this->data->first_name);
-            $this->user->last_name = htmlspecialchars($this->data->last_name);
+            $this->user->first_name = htmlspecialchars($this->inputData->first_name);
+            $this->user->last_name = htmlspecialchars($this->inputData->last_name);
             $this->user->updated_at = date("Y-m-d H:i:s");
 
             $this->user->update() ? $this->sendSuccessUpdateResponse() :  $this->sendResponse("Unable to update user.", 422);
