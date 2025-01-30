@@ -1,26 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use PDO;
+use PDOStatement;
 
 class User
 {
-    private $conn;
-    private $table_name = 'users';
+    private ?PDO $conn;
+    private string $table_name = 'users';
 
-    public $id;
-    public $first_name;
-    public $last_name;
-    public $createdAt;
-    public $updatedAt;
+    public int|string $id;
+    public string $first_name;
+    public string $last_name;
+    public string $created_at;
+    public ?string $updated_at;
 
-    public function __construct($db)
+    public function __construct(?PDO $db)
     {
         $this->conn = $db;
     }
 
-    function read()
+    function read(): PDOStatement
     {
         $query = "SELECT * FROM " . $this->table_name . " ORDER BY id";
 
@@ -30,68 +33,64 @@ class User
         return $stmt;
     }
 
-    function readOne()
+    function readOne(): void
     {
         $query = "SELECT * FROM " . $this->table_name . " WHERE id = :id LIMIT 0,1";
 
         $stmt = $this->conn->prepare($query);
 
-        $stmt->bindParam(":id", $this->id);
+        $stmt->bindParam(":id", $this->id, PDO::PARAM_INT);
 
         $stmt->execute();
 
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $this->id = $row['id'];
-        $this->first_name = $row['first_name'];
-        $this->last_name = $row['last_name'];
-        $this->createdAt = $row['createdAt'];
-        $this->updatedAt = $row['updatedAt'];
-    }
-
-    function create()
-    {
-        $query = "INSERT INTO " . $this->table_name . " SET first_name=:first_name, last_name=:last_name, createdAt=:createdAt";
-
-        $stmt = $this->conn->prepare($query);
-
-        $this->first_name = htmlspecialchars(strip_tags($this->first_name));
-        $this->last_name = htmlspecialchars(strip_tags($this->last_name));
-        $this->createdAt = htmlspecialchars(strip_tags($this->createdAt));
-
-        $stmt->bindParam(":first_name", $this->first_name);
-        $stmt->bindParam(":last_name", $this->last_name);
-        $stmt->bindParam(":createdAt", $this->createdAt);
-
-        if ($stmt->execute()) {
-            return true;
+        if ($row) {
+            $this->id = $row['id'];
+            $this->first_name = $row['first_name'];
+            $this->last_name = $row['last_name'];
+            $this->created_at = $row['created_at'];
+            $this->updated_at = $row['updated_at'];
         }
-        return false;
     }
 
-    function update()
+    function create(): bool
     {
-        $query = "UPDATE " . $this->table_name . " SET first_name=:first_name, last_name=:last_name, updatedAt=:updatedAt WHERE id=:id LIMIT 1";
+        $query = "INSERT INTO " . $this->table_name . " SET first_name=:first_name, last_name=:last_name, created_at=:created_at";
 
         $stmt = $this->conn->prepare($query);
 
         $this->first_name = htmlspecialchars(strip_tags($this->first_name));
         $this->last_name = htmlspecialchars(strip_tags($this->last_name));
-        $this->createdAt = htmlspecialchars(strip_tags($this->updatedAt));
+        $this->created_at = htmlspecialchars(strip_tags($this->created_at));
+
+        $stmt->bindParam(":first_name", $this->first_name, PDO::PARAM_STR);
+        $stmt->bindParam(":last_name", $this->last_name, PDO::PARAM_STR);
+        $stmt->bindParam(":created_at", $this->created_at, PDO::PARAM_STR);
+
+        return $stmt->execute();
+    }
+
+    function update(): bool
+    {
+        $query = "UPDATE " . $this->table_name . " SET first_name=:first_name, last_name=:last_name, updated_at=:updated_at WHERE id=:id LIMIT 1";
+
+        $stmt = $this->conn->prepare($query);
+
+        $this->first_name = htmlspecialchars(strip_tags($this->first_name));
+        $this->last_name = htmlspecialchars(strip_tags($this->last_name));
+        $this->updated_at = htmlspecialchars(strip_tags($this->updated_at));
         $this->id = htmlspecialchars(strip_tags($this->id));
 
-        $stmt->bindParam(":first_name", $this->first_name);
-        $stmt->bindParam(":last_name", $this->last_name);
-        $stmt->bindParam(":updatedAt", $this->updatedAt);
-        $stmt->bindParam(":id", $this->id);
+        $stmt->bindParam(":first_name", $this->first_name, PDO::PARAM_STR);
+        $stmt->bindParam(":last_name", $this->last_name, PDO::PARAM_STR);
+        $stmt->bindParam(":updated_at", $this->updated_at, PDO::PARAM_STR);
+        $stmt->bindParam(":id", $this->id, PDO::PARAM_INT);
 
-        if ($stmt->execute()) {
-            return true;
-        }
-        return false;
+        return $stmt->execute();
     }
 
-    function delete()
+    function delete(): bool
     {
         $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
 
@@ -99,12 +98,8 @@ class User
 
         $this->id = htmlspecialchars(strip_tags($this->id));
 
-        $stmt->bindParam(":id", $this->id);
+        $stmt->bindParam(":id", $this->id, PDO::PARAM_INT);
 
-        if ($stmt->execute()) {
-            return true;
-        }
-        return false;
+        return $stmt->execute();
     }
-
 }
