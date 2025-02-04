@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controllers;
 
+use App\Core\AbstractUserController;
 use App\Database\JsonDatabase;
-use JetBrains\PhpStorm\NoReturn;
+use App\Interfaces\UsersInterfaces;
 
-class JsonUserController
+class JsonUserController extends AbstractUserController implements UsersInterfaces
 {
     public JsonDatabase $db;
     public array $user;
@@ -13,17 +16,6 @@ class JsonUserController
     public function __construct()
     {
         $this->db = new JsonDatabase();
-    }
-
-    private function setHeaders(string $method = "GET"): void
-    {
-        header("Access-Control-Allow-Origin: *");
-        header("Content-Type: application/json; charset=UTF-8");
-        header("Access-Control-Allow-Methods: $method");
-
-        if($method != 'GET') {
-            header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
-        }
     }
 
     public function readAllUsers(): void
@@ -40,23 +32,6 @@ class JsonUserController
         foreach ($users as $user) {
             if ($id == $user['id']) {
                 $this->sendResponse(['user' => $user]);
-                break;
-            }
-        }
-    }
-
-    public function deleteUser(int|string $id): void
-    {
-        $this->setHeaders('DELETE');
-
-        $users = $this->db->getJsonDatabase();
-
-        foreach ($users as $key => $user) {
-            if ($id == $user['id']) {
-                unset($users[$key]);
-                $users = array_values($users);
-                $this->db->setJsonDatabase($users);
-                $this->sendResponse('User deleted', 204);
                 break;
             }
         }
@@ -114,27 +89,22 @@ class JsonUserController
 
         $this->db->setJsonDatabase($users);
         $this->sendSuccessUpdateResponse($id);
-
     }
 
-    private function sendResponse(array|string $message, int $statusCode = 200, array $additionalData = []): void
+    public function deleteUser(int|string $id): void
     {
-        http_response_code($statusCode);
-        $response = array_merge(["message" => $message], $additionalData);
-        echo json_encode($response,JSON_UNESCAPED_UNICODE);
-    }
+        $this->setHeaders('DELETE');
 
-    #[NoReturn] private function sendSuccessCreatedResponse(int $userId): void
-    {
-        $this->sendResponse("User was created.", 201);
-        header("Location: /users/$userId", true, 303);
-        exit();
-    }
+        $users = $this->db->getJsonDatabase();
 
-    #[NoReturn] private function sendSuccessUpdateResponse(int $userIndex): void
-    {
-        $this->sendResponse("User was updated.", 201);
-        header("Location: /users/$userIndex", true, 303);
-        exit();
+        foreach ($users as $key => $user) {
+            if ($id == $user['id']) {
+                unset($users[$key]);
+                $users = array_values($users);
+                $this->db->setJsonDatabase($users);
+                $this->sendResponse("User was deleted.");
+                break;
+            }
+        }
     }
 }
