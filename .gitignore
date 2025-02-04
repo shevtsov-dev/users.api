@@ -2,3 +2,4 @@ vendor
 composer.phar
 .osp
 .idea
+.env

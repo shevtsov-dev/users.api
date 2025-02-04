@@ -18,7 +18,7 @@ class User
     public string $created_at;
     public ?string $updated_at;
 
-    public function __construct(?PDO $db)
+    public function __construct(PDO $db)
     {
         $this->conn = $db;
     }

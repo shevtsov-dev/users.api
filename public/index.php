@@ -2,9 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Controllers\JsonUserController;
 use App\Controllers\UserController;
+use Dotenv\Dotenv;
 
 require_once '../vendor/autoload.php';
+
+$dotenv = Dotenv::createImmutable(__DIR__ . '/..');
+$dotenv->load();
 
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
@@ -14,7 +19,7 @@ $requestMethod = $_SERVER['REQUEST_METHOD'];
 $requestUri = $_SERVER['REQUEST_URI'];
 
 $requestUri = trim($requestUri, '/');
-$userController = new UserController();
+$_ENV['DB_SOURCE'] === 'mysql' ? $userController = new UserController() : $userController = new JsonUserController();
 
 switch ($requestMethod) {
     case 'GET':
