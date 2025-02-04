@@ -4,7 +4,8 @@ namespace App\Database;
 
 class JsonDatabase
 {
-    public string $jsonDatabase = __DIR__ . '\data.json';
+    public string $jsonDatabase = __DIR__ . '\..\..\storage\data.json';
+
 
     public function getJsonDatabase(): array
     {
