@@ -8,7 +8,6 @@ use App\Core\AbstractUserController;
 use App\Database\Database;
 use App\Interfaces\UsersInterfaces;
 use App\Models\User;
-use JetBrains\PhpStorm\NoReturn;
 use PDO;
 
 class UserController extends AbstractUserController implements UsersInterfaces
@@ -49,15 +48,13 @@ class UserController extends AbstractUserController implements UsersInterfaces
         $this->setHeaders();
 
         $this->user->id = (int) $id;
-        $this->user->readOne();
-
-        if ($this->user->id) {
+        if($this->user->readOne()) {
             $usersArray = $this->user;
 
             $this->sendResponse([
                 "user" => $usersArray
             ]);
-        } else $this->sendResponse("User not found.", 404);
+        } else $this->sendNotFoundResponse("User $id:");
     }
 
     public function createUser(): void
@@ -97,7 +94,7 @@ class UserController extends AbstractUserController implements UsersInterfaces
 
         $this->user->id = $id;
         if ($this->user->delete()) {
-            $this->sendResponse("User was deleted.", 204);
+            $this->sendSuccessDeletedResponse();
         } else $this->sendResponse("Unable to delete user.", 422);
     }
 }

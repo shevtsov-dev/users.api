@@ -33,25 +33,22 @@ class User
         return $stmt;
     }
 
-    function readOne(): void
+    function readOne(): bool
     {
-        $query = "SELECT * FROM " . $this->table_name . " WHERE id = :id LIMIT 0,1";
-
+        $query = "SELECT * FROM " . $this->table_name . " WHERE id = :id LIMIT 1";
         $stmt = $this->conn->prepare($query);
-
         $stmt->bindParam(":id", $this->id, PDO::PARAM_INT);
-
         $stmt->execute();
 
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($row) {
-            $this->id = $row['id'];
-            $this->first_name = $row['first_name'];
-            $this->last_name = $row['last_name'];
-            $this->created_at = $row['created_at'];
-            $this->updated_at = $row['updated_at'];
+            foreach ($row as $key => $value) {
+                $this->$key = $value;
+            }
+            return true;
         }
+        return false;
     }
 
     function create(): bool

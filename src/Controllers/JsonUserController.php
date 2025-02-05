@@ -29,11 +29,18 @@ class JsonUserController extends AbstractUserController implements UsersInterfac
     {
         $this->setHeaders('GET');
         $users = $this->db->getJsonDatabase();
+        $userFound = false;
+
         foreach ($users as $user) {
             if ($id == $user['id']) {
                 $this->sendResponse(['user' => $user]);
+                $userFound = true;
                 break;
             }
+        }
+
+        if (!$userFound) {
+            $this->sendNotFoundResponse('User: ' . $id);
         }
     }
 
@@ -74,6 +81,7 @@ class JsonUserController extends AbstractUserController implements UsersInterfac
         $inputData = json_decode(file_get_contents('php://input'), true);
 
         $userIndex = null;
+
         foreach ($users as $index => $user) {
             if ($id == $user['id']) {
                 $userIndex = $index;
@@ -94,17 +102,22 @@ class JsonUserController extends AbstractUserController implements UsersInterfac
     public function deleteUser(int|string $id): void
     {
         $this->setHeaders('DELETE');
-
         $users = $this->db->getJsonDatabase();
+        $userFound = false;
 
         foreach ($users as $key => $user) {
             if ($id == $user['id']) {
                 unset($users[$key]);
                 $users = array_values($users);
                 $this->db->setJsonDatabase($users);
-                $this->sendResponse("User was deleted.");
+                $this->sendSuccessDeletedResponse();
+                $userFound = true;
                 break;
             }
+        }
+
+        if (!$userFound) {
+            $this->sendNotFoundResponse('User: ' . $id);
         }
     }
 }

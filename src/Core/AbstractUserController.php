@@ -40,4 +40,14 @@ abstract class AbstractUserController
         header("Location: /users/$userId", true, 303);
         exit();
     }
+
+    protected function sendSuccessDeletedResponse(): void
+    {
+        http_response_code( 204);
+    }
+
+    protected function sendNotFoundResponse(string $resource): void
+    {
+        $this->sendResponse("$resource not found.", 404);
+    }
 }

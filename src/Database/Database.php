@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Database;
 
 use PDO;
+use PDOException;
 
 class Database
 {
@@ -22,13 +23,18 @@ class Database
 
     public function getConnection() : PDO|JsonDatabase|null
     {
-        if ($_ENV["DB_SOURCE"] === "mysql") {
-            if ($this->conn === null) {
-                $this->conn = new PDO("mysql:host=$this->host;dbname=$this->dbname", $this->user, $this->pass);
+        try {
+            if ($_ENV["DB_SOURCE"] === "mysql") {
+                if ($this->conn === null) {
+                    $this->conn = new PDO("mysql:host=$this->host;dbname=$this->dbname", $this->user, $this->pass);
+                }
+                return $this->conn;
+            } else {
+                return $this->jsonDatabase;
             }
-            return $this->conn;
-        } else {
-            return $this->jsonDatabase;
+        } catch (PDOException $e) {
+            error_log("[" . date("Y-m-d H:i:s") . "] Connect to DataBase Error: " . mb_convert_encoding($e->getMessage(), 'utf8', 'Windows-1251') . PHP_EOL, 3, __DIR__ . '\..\..\logs\errors.log');
+            return null;
         }
     }
 }
